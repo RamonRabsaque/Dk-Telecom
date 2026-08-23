@@ -2721,24 +2721,39 @@
         popularSelectCidadesAdmin();
     };
 
-    window.adminExcluirUsuario = function (id) {
+    async function adminExcluirUsuario(id) {
         const user = getUserById(id);
-        if (!user) {
-            alert('❌ Usuário não encontrado!');
-            return;
+        if (!user) return;
+
+        if (!confirm(`Tem certeza que deseja excluir o usuário "${user.login}"?`)) return;
+
+        // Remove localmente
+        usuarios = usuarios.filter(u => u.id !== id);
+        salvarUsuariosLocal();
+
+        // Remove no Supabase
+        if (supabaseDisponivel()) {
+            try {
+                const { error } = await supabaseClient
+                    .from('usuarios')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) {
+                    console.error('Erro ao excluir no Supabase:', error);
+                    alert('⚠️ Usuário excluído localmente, mas falhou no Supabase.');
+                } else {
+                    alert('✅ Usuário excluído com sucesso!');
+                }
+            } catch (e) {
+                console.error(e);
+            }
         }
-        if (user.login === 'admin') {
-            alert('❌ Não é possível excluir o usuário administrador principal!');
-            return;
-        }
-        if (confirm(`⚠️ Tem certeza que deseja excluir o usuário "${user.login}"?`)) {
-            usuarios = usuarios.filter(u => u.id !== id);
-            salvarUsuarios();
-            atualizarAdminUsuarios();
-            adicionarLog('🗑️ Excluiu usuário', `${user.login}`);
-            alert('✅ Usuário excluído!');
-        }
-    };
+
+        adicionarLog('🗑️ Excluiu usuário', user.login);
+        atualizarAdminUsuarios();
+        atualizarAdminDashboard();
+    }
 
     window.adminEditarCidade = function (id) {
         const cidade = getCidadeById(id);
@@ -2755,28 +2770,51 @@
         document.getElementById('adminNovaCidade').style.display = 'none';
     };
 
-    window.adminExcluirCidade = function (id) {
+    async function adminExcluirCidade(id) {
         const cidade = getCidadeById(id);
-        if (!cidade) {
-            alert('❌ Cidade não encontrada!');
-            return;
-        }
-        const usuariosCidade = usuarios.filter(u => u.cidade === id);
-        if (usuariosCidade.length > 0) {
-            alert(`❌ Não é possível excluir "${cidade.nome}" pois existem ${usuariosCidade.length} usuários vinculados.`);
-            return;
-        }
-        if (confirm(`⚠️ Tem certeza que deseja excluir a cidade "${cidade.nome}"?`)) {
-            cidade.ativo = false;
-            salvarCidades();
-            atualizarAdminCidades();
-            popularSelectCidadesAdmin();
-            popularSelectCidadesLogin();
-            adicionarLog('🗑️ Excluiu cidade', `${cidade.nome}`);
-            alert('✅ Cidade excluída!');
-        }
-    };
+        if (!cidade) return;
 
+        if (!confirm(`Tem certeza que deseja excluir a cidade "${cidade.nome}"?\n\nIsso não apaga os dados da planilha, apenas remove a cidade da lista.`)) {
+            return;
+        }
+
+        // Remove localmente (marca como inativa ou remove)
+        cidades = cidades.filter(c => c.id !== id);
+        salvarCidadesLocal();
+
+        // Remove no Supabase
+        if (supabaseDisponivel()) {
+            try {
+                // Opção 1: apagar de verdade
+                const { error } = await supabaseClient
+                    .from('cidades')
+                    .delete()
+                    .eq('id', id);
+
+                // Opção 2 (mais segura): só desativar
+                // const { error } = await supabaseClient
+                //     .from('cidades')
+                //     .update({ ativo: false })
+                //     .eq('id', id);
+
+                if (error) {
+                    console.error('Erro ao excluir cidade no Supabase:', error);
+                    alert('⚠️ Cidade excluída localmente, mas falhou no Supabase.');
+                } else {
+                    alert('✅ Cidade excluída com sucesso!');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('⚠️ Cidade excluída localmente, mas houve erro no Supabase.');
+            }
+        }
+
+        adicionarLog('🗑️ Excluiu cidade', cidade.nome);
+        atualizarAdminCidades();
+        popularSelectCidadesAdmin();
+        popularSelectCidadesLogin();
+        atualizarAdminDashboard();
+    }
     // ============================================================
     // FUNÇÕES ADMIN
     // ============================================================
@@ -2862,8 +2900,8 @@
         tbody.innerHTML = html;
     }
 
-    function adminSalvarUsuario() {
-        const login = document.getElementById('adminFormUsuarioLogin').value.trim();
+    async function adminSalvarUsuario() {
+        const login = document.getElementById('adminFormUsuarioLogin').value.trim().toLowerCase();
         const nome = document.getElementById('adminFormUsuarioNome').value.trim();
         const senha = document.getElementById('adminFormUsuarioSenha').value;
         const cidade = document.getElementById('adminFormUsuarioCidade').value;
@@ -2874,29 +2912,67 @@
         if (!login) { alert('❌ Informe o usuário!'); return; }
         if (!nome) { alert('❌ Informe o nome!'); return; }
 
+        // ========== EDITAR ==========
         if (editId) {
             const user = getUserById(editId);
             if (!user) { alert('❌ Usuário não encontrado!'); return; }
+
             if (login !== user.login && usuarios.find(u => u.login === login)) {
                 alert('❌ Este usuário já existe!');
                 return;
             }
+
+            // Atualiza localmente
             user.login = login;
             user.nome = nome;
             if (senha) user.senha = senha;
             user.cidade = cidade;
             user.nivel = nivel;
             user.status = status;
-            salvarUsuarios();
-            adicionarLog('✏️ Editou usuário', `${login}`);
-            alert('✅ Usuário atualizado!');
-        } else {
+            salvarUsuariosLocal();
+
+            // Atualiza no Supabase
+            if (supabaseDisponivel()) {
+                try {
+                    const updateData = {
+                        login,
+                        nome,
+                        cidade,
+                        nivel,
+                        status
+                    };
+                    if (senha) updateData.senha = senha;
+
+                    const { error } = await supabaseClient
+                        .from('usuarios')
+                        .update(updateData)
+                        .eq('id', editId);
+
+                    if (error) {
+                        console.error('Erro ao atualizar no Supabase:', error);
+                        alert('⚠️ Usuário atualizado localmente, mas falhou no Supabase:\n' + error.message);
+                    } else {
+                        alert('✅ Usuário atualizado com sucesso!');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('⚠️ Usuário atualizado localmente, mas houve erro no Supabase.');
+                }
+            } else {
+                alert('✅ Usuário atualizado (apenas localmente)!');
+            }
+
+            adicionarLog('✏️ Editou usuário', login);
+        }
+        // ========== CRIAR NOVO ==========
+        else {
             if (usuarios.find(u => u.login === login)) {
                 alert('❌ Este usuário já existe!');
                 return;
             }
             if (!senha) { alert('❌ Informe uma senha!'); return; }
-            usuarios.push({
+
+            const novoUsuario = {
                 id: gerarIdUnico(),
                 login,
                 senha,
@@ -2904,12 +2980,51 @@
                 cidade,
                 nivel,
                 status
-            });
-            salvarUsuarios();
-            adicionarLog('➕ Criou usuário', `${login}`);
-            alert('✅ Usuário criado!');
+            };
+
+            // Salva localmente
+            usuarios.push(novoUsuario);
+            salvarUsuariosLocal();
+
+            // Salva no Supabase
+            if (supabaseDisponivel()) {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('usuarios')
+                        .insert([{
+                            login,
+                            senha,
+                            nome,
+                            cidade,
+                            nivel,
+                            status
+                        }])
+                        .select()
+                        .single();
+
+                    if (error) {
+                        console.error('Erro ao criar no Supabase:', error);
+                        alert('⚠️ Usuário criado localmente, mas falhou no Supabase:\n' + error.message);
+                    } else {
+                        // Atualiza o id local com o id real do Supabase (UUID)
+                        if (data && data.id) {
+                            novoUsuario.id = data.id;
+                            salvarUsuariosLocal();
+                        }
+                        alert('✅ Usuário criado com sucesso! Outras pessoas já podem usá-lo.');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('⚠️ Usuário criado localmente, mas houve erro no Supabase.');
+                }
+            } else {
+                alert('✅ Usuário criado (apenas localmente)!');
+            }
+
+            adicionarLog('➕ Criou usuário', login);
         }
 
+        // Fecha o formulário e atualiza a tela
         document.getElementById('adminFormUsuario').style.display = 'none';
         document.getElementById('adminNovoUsuario').style.display = 'block';
         document.getElementById('adminFormUsuarioLogin').disabled = false;
@@ -2957,7 +3072,7 @@
         tbody.innerHTML = html;
     }
 
-    function adminSalvarCidade() {
+    async function adminSalvarCidade() {
         const nome = document.getElementById('adminFormCidadeNome').value.trim();
         const estado = document.getElementById('adminFormCidadeEstado').value.trim().toUpperCase();
         const responsavel = document.getElementById('adminFormCidadeResponsavel').value.trim();
@@ -2966,35 +3081,101 @@
         if (!nome) { alert('❌ Informe o nome da cidade!'); return; }
         if (!estado || estado.length !== 2) { alert('❌ Informe o estado (2 letras)'); return; }
 
-        const id = nome.toLowerCase().replace(/[^a-z]/g, '');
+        const id = nome.toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')   // remove acentos
+            .replace(/[^a-z0-9]/g, '');       // só letras e números
 
+        // ========== EDITAR ==========
         if (editId) {
             const cidade = getCidadeById(editId);
             if (!cidade) { alert('❌ Cidade não encontrada!'); return; }
+
             cidade.nome = capitalizar(nome);
             cidade.estado = estado;
             cidade.responsavel = responsavel;
             cidade.ativo = true;
-            salvarCidades();
-            adicionarLog('✏️ Editou cidade', `${capitalizar(nome)}`);
-            alert('✅ Cidade atualizada!');
-        } else {
+            salvarCidadesLocal();
+
+            // Atualiza no Supabase
+            if (supabaseDisponivel()) {
+                try {
+                    const { error } = await supabaseClient
+                        .from('cidades')
+                        .update({
+                            nome: cidade.nome,
+                            estado: cidade.estado,
+                            responsavel: cidade.responsavel,
+                            ativo: true
+                        })
+                        .eq('id', editId);
+
+                    if (error) {
+                        console.error('Erro ao atualizar cidade no Supabase:', error);
+                        alert('⚠️ Cidade atualizada localmente, mas falhou no Supabase:\n' + error.message);
+                    } else {
+                        alert('✅ Cidade atualizada com sucesso!');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('⚠️ Cidade atualizada localmente, mas houve erro no Supabase.');
+                }
+            } else {
+                alert('✅ Cidade atualizada (apenas localmente)!');
+            }
+
+            adicionarLog('✏️ Editou cidade', cidade.nome);
+        }
+        // ========== CRIAR NOVA ==========
+        else {
             if (cidades.find(c => c.id === id)) {
                 alert('❌ Esta cidade já existe!');
                 return;
             }
-            cidades.push({
+
+            const novaCidade = {
                 id: id,
                 nome: capitalizar(nome),
                 estado: estado,
                 responsavel: responsavel,
                 ativo: true
-            });
-            salvarCidades();
-            adicionarLog('➕ Criou cidade', `${capitalizar(nome)}`);
-            alert('✅ Cidade criada!');
+            };
+
+            // Salva localmente
+            cidades.push(novaCidade);
+            salvarCidadesLocal();
+
+            // Salva no Supabase
+            if (supabaseDisponivel()) {
+                try {
+                    const { error } = await supabaseClient
+                        .from('cidades')
+                        .insert([{
+                            id: novaCidade.id,
+                            nome: novaCidade.nome,
+                            estado: novaCidade.estado,
+                            responsavel: novaCidade.responsavel,
+                            ativo: true
+                        }]);
+
+                    if (error) {
+                        console.error('Erro ao criar cidade no Supabase:', error);
+                        alert('⚠️ Cidade criada localmente, mas falhou no Supabase:\n' + error.message);
+                    } else {
+                        alert('✅ Cidade criada com sucesso! Outras pessoas já podem usá-la.');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('⚠️ Cidade criada localmente, mas houve erro no Supabase.');
+                }
+            } else {
+                alert('✅ Cidade criada (apenas localmente)!');
+            }
+
+            adicionarLog('➕ Criou cidade', novaCidade.nome);
         }
 
+        // Fecha formulário e atualiza a tela
         document.getElementById('adminFormCidade').style.display = 'none';
         document.getElementById('adminNovaCidade').style.display = 'block';
         document.getElementById('adminFormCidadeSalvar').dataset.editId = '';
