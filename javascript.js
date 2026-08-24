@@ -1233,15 +1233,9 @@
         if (dadosPlanilha.length === 0) {
             tbody.innerHTML =
                 '<tr><td colspan="12"><div class="empty-table-state">' +
-                '<span class="empty-icon" aria-hidden="true">' +
-                '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
-                '<rect x="2" y="8" width="20" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/>' +
-                '<rect x="5" y="4" width="14" height="5" rx="1.5" stroke="currentColor" stroke-width="1.6"/>' +
-                '<circle cx="8" cy="14" r="1.2" fill="currentColor"/>' +
-                '<circle cx="12" cy="14" r="1.2" fill="currentColor"/>' +
-                '<circle cx="16" cy="14" r="1.2" fill="currentColor"/>' +
-                '<path d="M6 18h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
-                '</svg></span>' +
+                '<div class="empty-icon">' +
+                '<img src="assets/registro-icon.png" alt="" class="empty-icon-img">' +
+                '</div>' +
                 '<div class="empty-text">Nenhum registro adicionado</div>' +
                 '</div></td></tr>';
             return;
@@ -3459,7 +3453,7 @@
     // ============================================================
     document.addEventListener('DOMContentLoaded', async function () {
         aplicarTema(theme);
-        document.getElementById('dataAtual').innerText = new Date().toLocaleDateString('pt-BR');
+        (function () { const d = new Date(); const dd = String(d.getDate()).padStart(2, '0'); const mm = String(d.getMonth() + 1).padStart(2, '0'); const yyyy = d.getFullYear(); document.getElementById('dataAtual').innerText = dd + '.' + mm + '.' + yyyy; })();
         document.getElementById('vencimento').value = new Date().toISOString().split('T')[0];
 
         await carregarUsuarios();
