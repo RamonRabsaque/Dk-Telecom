@@ -10,7 +10,7 @@
         rel="stylesheet">
     <!-- Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -224,12 +224,37 @@
 </head>
 
 <body>
+    <!-- Banner Outubro Rosa -->
+    <div class="outubro-rosa-banner" id="outubroRosaBanner">
+        <span class="rosa-ribbon">🎀</span>
+        <span>Outubro Rosa — Cuide-se. Previna-se. Ame-se.</span>
+        <button type="button" class="rosa-banner-close" id="btnFecharRosaBanner" title="Fechar">✕</button>
+    </div>
+
 
     <!-- ============================================================
     TELA DE LOGIN
     ============================================================ -->
     <div class="login-container" id="loginContainer">
+        <!-- Efeitos Outubro Rosa no fundo do login -->
+        <div class="login-rosa-fx" aria-hidden="true">
+            <span class="rosa-float r1">🎀</span>
+            <span class="rosa-float r2">💗</span>
+            <span class="rosa-float r3">🎀</span>
+            <span class="rosa-float r4">💕</span>
+            <span class="rosa-float r5">🎀</span>
+            <span class="rosa-float r6">💗</span>
+            <span class="rosa-petala p1"></span>
+            <span class="rosa-petala p2"></span>
+            <span class="rosa-petala p3"></span>
+            <span class="rosa-petala p4"></span>
+            <span class="rosa-petala p5"></span>
+            <span class="rosa-petala p6"></span>
+            <span class="rosa-petala p7"></span>
+            <span class="rosa-petala p8"></span>
+        </div>
         <div class="login-box">
+            <div class="login-rosa-badge">🎀 Outubro Rosa</div>
             <div class="logo">
                 <img src="assets/logo-planilha-1.png" alt="DK Telecom">
             </div>
@@ -326,6 +351,11 @@
                 <span class="icon">📋</span>
                 <span class="label">Histórico</span>
                 <span class="badge" id="badgeRecibos">0</span>
+            </button>
+            <button class="btn-sidebar" id="btnClientesBuique" title="Clientes salvos de Buíque" style="display:none;">
+                <span class="icon">👥</span>
+                <span class="label">Clientes</span>
+                <span class="badge" id="badgeClientesBuique">0</span>
             </button>
 
             <div class="divider"></div>
@@ -488,9 +518,12 @@
                     <img src="assets/logo-planilha-1.png" alt="DK TELECOM">
                 </div>
                 <div class="recibo-linhas-grid">
-                    <div class="linha-recibo-fina">
+                    <div class="linha-recibo-fina linha-nome-cliente">
                         <label>Nome:</label>
-                        <input type="text" id="reciboNome" class="input-fino" placeholder="Nome do cliente">
+                        <div class="autocomplete-wrap">
+                            <input type="text" id="reciboNome" class="input-fino input-nome-cliente" placeholder="Nome do cliente" autocomplete="off">
+                            <div id="sugestoesClientes" class="autocomplete-dropdown" style="display:none;"></div>
+                        </div>
                     </div>
                     <div class="linha-dupla-row">
                         <div class="linha-recibo-fina">
@@ -586,6 +619,96 @@
             </div>
             <div id="somaTotalRecibos" class="soma-total-recibos">💰 Total Geral: <span>R$ 0,00</span></div>
             <div id="listaRecibos"></div>
+        </div>
+    </div>
+
+    <!-- ===== PANEL CLIENTES BUÍQUE ===== -->
+    <div class="panel-clientes" id="panelClientes">
+        <div class="panel-title">
+            👥 Clientes Salvos - Buíque
+            <button class="close-btn" id="closeClientesBtn">✕</button>
+        </div>
+        <div class="panel-content">
+            <div class="clientes-busca-bar">
+                <input type="text" id="buscaClienteBuique" class="input-busca-cliente" placeholder="🔍 Buscar por nome, login ou ID...">
+                <button class="btn-recibo btn-salvar-recibo" id="btnExportarClientesBuique" style="padding:6px 14px;font-size:11px;">📊 Exportar</button>
+            </div>
+            <div id="totalClientesBuique" class="soma-total-recibos">Total de clientes: <span>0</span></div>
+            <div id="listaClientesBuique" class="lista-clientes-buique"></div>
+        </div>
+    </div>
+
+    <!-- ===== PANEL DETALHE CLIENTE ===== -->
+    <div class="panel-cliente-detalhe" id="panelClienteDetalhe">
+        <div class="panel-title">
+            👤 Ficha do Cliente
+            <button class="close-btn" id="closeClienteDetalheBtn">✕</button>
+        </div>
+        <div class="panel-content">
+            <div class="cliente-detalhe-info" style="margin-bottom:14px;">
+                <div class="form-grid">
+                    <div class="campo">
+                        <label>Nome</label>
+                        <input type="text" id="detalheNome" readonly>
+                    </div>
+                    <div class="campo">
+                        <label>Login</label>
+                        <input type="text" id="detalheLogin">
+                    </div>
+                    <div class="campo">
+                        <label>ID Contrato</label>
+                        <input type="text" id="detalheIdContrato">
+                    </div>
+                    <div class="campo">
+                        <label>Último Valor</label>
+                        <input type="text" id="detalheValor" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cliente-localizacao-box">
+                <h4>📍 Localização (técnicos em campo)</h4>
+                <div class="form-grid" style="margin-bottom:10px;">
+                    <div class="campo">
+                        <label>Endereço / Referência</label>
+                        <input type="text" id="detalheEndereco" placeholder="Rua, número, bairro, ponto de referência">
+                    </div>
+                    <div class="campo">
+                        <label>Latitude</label>
+                        <input type="text" id="detalheLat" placeholder="Ex: -8.6234">
+                    </div>
+                    <div class="campo">
+                        <label>Longitude</label>
+                        <input type="text" id="detalheLng" placeholder="Ex: -37.1542">
+                    </div>
+                    <div class="campo">
+                        <label>Observações do técnico</label>
+                        <input type="text" id="detalheObsLocal" placeholder="Portão azul, casa de esquina...">
+                    </div>
+                </div>
+                <div class="botoes-recibo" style="margin-top:0;">
+                    <button class="btn-recibo" id="btnAbrirMapaCliente" type="button">🗺️ Abrir no Mapa</button>
+                    <button class="btn-recibo btn-salvar-recibo" id="btnSalvarDetalheCliente" type="button">💾 Salvar Ficha</button>
+                    <button class="btn-recibo" id="btnUsarClienteDaFicha" type="button">📄 Usar no Recibo</button>
+                </div>
+            </div>
+
+            <!-- Galeria de fotos da casa (parte de baixo) -->
+            <div class="cliente-fotos-box">
+                <div class="cliente-fotos-header">
+                    <h4>🏠 Fotos da casa</h4>
+                    <label class="btn-foto-upload btn-foto-galeria">
+                        ➕ Adicionar fotos
+                        <input type="file" id="clienteFotosGaleriaInput" accept="image/*" multiple style="display:none;">
+                    </label>
+                </div>
+                <p class="cliente-fotos-hint">Adicione várias fotos da residência (fachada, poste, portão, etc.). Máx. 800 KB cada.</p>
+                <div id="clienteFotosGaleria" class="cliente-fotos-galeria">
+                    <div class="cliente-fotos-vazio" id="clienteFotosVazio">Nenhuma foto adicional ainda.</div>
+                </div>
+            </div>
+
+            <input type="hidden" id="detalheClienteId">
         </div>
     </div>
 
