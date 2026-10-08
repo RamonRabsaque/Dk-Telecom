@@ -816,7 +816,9 @@
         .panel-historico,
         .panel-editar,
         .panel-backup,
-        .panel-admin {
+        .panel-admin,
+        .panel-clientes,
+        .panel-cliente-detalhe {
             position: fixed;
             background: var(--bg-secondary);
             z-index: 2000;
@@ -831,7 +833,9 @@
         .panel-historico.show,
         .panel-editar.show,
         .panel-backup.show,
-        .panel-admin.show {
+        .panel-admin.show,
+        .panel-clientes.show,
+        .panel-cliente-detalhe.show {
             opacity: 1;
             visibility: visible;
         }
@@ -857,7 +861,9 @@
         .panel-historico,
         .panel-editar,
         .panel-backup,
-        .panel-admin {
+        .panel-admin,
+        .panel-clientes,
+        .panel-cliente-detalhe {
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) scale(0.96);
@@ -875,7 +881,9 @@
         .panel-historico.show,
         .panel-editar.show,
         .panel-backup.show,
-        .panel-admin.show {
+        .panel-admin.show,
+        .panel-clientes.show,
+        .panel-cliente-detalhe.show {
             transform: translate(-50%, -50%) scale(1);
         }
 
@@ -1803,16 +1811,16 @@
             .recibo-form-card-print {
                 break-inside: avoid;
                 page-break-inside: avoid;
-                border: 1px solid #000;
+                border: 1.5px solid #000;
                 border-radius: 3px;
-                padding: 4px 8px;
-                margin: 2px 0;
+                padding: 10px 14px;
+                margin: 0 0 10mm 0;
                 width: 100%;
                 box-sizing: border-box;
-                height: calc(28vh - 6px);
-                min-height: 100px;
-                max-height: 130px;
-                font-size: 8px;
+                height: 48mm;
+                min-height: 48mm;
+                max-height: 48mm;
+                font-size: 10px;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
@@ -1872,8 +1880,9 @@
                 min-width: 30px;
             }
 
-            .recibo-form-card-print:nth-child(4n) {
+            .recibo-form-card-print:nth-child(5n) {
                 page-break-after: always;
+                margin-bottom: 0;
             }
 
             .total-soma-print {
@@ -1945,7 +1954,9 @@
             .panel-historico,
             .panel-editar,
             .panel-backup,
-            .panel-admin {
+            .panel-admin,
+            .panel-clientes,
+            .panel-cliente-detalhe {
                 max-width: 98%;
                 width: 98%;
                 border-radius: 16px;
@@ -2564,3 +2575,559 @@
                 max-height: 40px;
             }
         }
+
+
+/* ============================================================
+   OUTUBRO ROSA + CLIENTES BUÍQUE
+   ============================================================ */
+
+/* Tema Outubro Rosa (sobrescreve cores principais de forma sutil) */
+:root {
+    --rosa-primary: #c2185b;
+    --rosa-light: #e91e63;
+    --rosa-soft: #fce4ec;
+    --rosa-dark: #880e4f;
+    --rosa-accent: #f48fb1;
+}
+
+body.outubro-rosa {
+    --primary: #c2185b;
+    --primary-light: #e91e63;
+    --primary-dark: #880e4f;
+    --primary-hover: #ad1457;
+    --card-entrada: #c2185b;
+    --card-cofre: #e91e63;
+}
+
+body.outubro-rosa .btn-sidebar.primary {
+    background: linear-gradient(135deg, #c2185b, #e91e63);
+    box-shadow: 0 2px 10px rgba(194, 24, 91, 0.35);
+}
+
+body.outubro-rosa .btn-sidebar.primary:hover {
+    background: linear-gradient(135deg, #ad1457, #c2185b);
+}
+
+body.outubro-rosa thead th {
+    background: #e91e63;
+    border-bottom-color: #880e4f;
+}
+
+body.outubro-rosa .info-pill {
+    background: linear-gradient(135deg, #880e4f, #c2185b);
+}
+
+body.outubro-rosa .btn-add-principal,
+body.outubro-rosa .btn-recibo.btn-salvar-recibo,
+body.outubro-rosa .login-box .btn-login {
+    background: linear-gradient(135deg, #c2185b, #e91e63);
+    box-shadow: 0 4px 16px rgba(194, 24, 91, 0.25);
+}
+
+body.outubro-rosa .btn-add-principal:hover,
+body.outubro-rosa .btn-recibo.btn-salvar-recibo:hover,
+body.outubro-rosa .login-box .btn-login:hover {
+    background: linear-gradient(135deg, #ad1457, #c2185b);
+}
+
+.outubro-rosa-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 8px 40px 8px 16px;
+    background: linear-gradient(90deg, #fce4ec, #f8bbd9, #fce4ec);
+    color: #880e4f;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    border-bottom: 2px solid #f48fb1;
+    box-shadow: 0 2px 12px rgba(194, 24, 91, 0.15);
+}
+
+.outubro-rosa-banner .rosa-ribbon {
+    font-size: 18px;
+}
+
+.outubro-rosa-banner.hidden {
+    display: none;
+}
+
+.rosa-banner-close {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #880e4f;
+    font-size: 16px;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rosa-banner-close:hover {
+    background: rgba(194, 24, 91, 0.12);
+}
+
+body.outubro-rosa.has-rosa-banner .login-container,
+body.outubro-rosa.has-rosa-banner .app-layout {
+    padding-top: 40px;
+}
+
+/* Campo Nome maior no recibo */
+.linha-nome-cliente {
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+}
+
+.linha-nome-cliente label {
+    width: 70px !important;
+    font-size: 12px !important;
+}
+
+.autocomplete-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+
+.autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px var(--shadow-hover);
+    z-index: 3000;
+    max-height: 220px;
+    overflow-y: auto;
+    margin-top: 2px;
+}
+
+.autocomplete-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-light);
+    transition: background 0.15s ease;
+}
+
+.autocomplete-item:last-child { border-bottom: none; }
+.autocomplete-item:hover,
+.autocomplete-item.active { background: var(--bg-hover); }
+
+.autocomplete-item .ac-nome {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.autocomplete-item .ac-meta {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* Lista de clientes */
+.clientes-busca-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.input-busca-cliente {
+    flex: 1;
+    min-width: 180px;
+    padding: 10px 14px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    font-size: 13px;
+    font-family: var(--font-family);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.input-busca-cliente:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(194, 24, 91, 0.12);
+}
+
+.lista-clientes-buique {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+.card-cliente-buique {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    transition: all 0.2s ease;
+}
+
+.card-cliente-buique:hover {
+    border-color: var(--primary);
+    box-shadow: 0 2px 12px var(--shadow-color);
+}
+
+.card-cliente-info h4 {
+    font-size: 13px;
+    margin: 0 0 4px 0;
+    color: var(--text-primary);
+}
+
+.card-cliente-info p {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 1px 0;
+}
+
+.card-cliente-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.btn-ver-cliente {
+    background: #fce4ec !important;
+    border-color: #f48fb1 !important;
+    color: #880e4f !important;
+}
+
+.btn-ver-cliente:hover {
+    background: #f8bbd9 !important;
+}
+
+/* Ficha do cliente */
+.cliente-detalhe-grid {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+@media (max-width: 600px) {
+    .cliente-detalhe-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.cliente-detalhe-foto {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.foto-preview {
+    width: 140px;
+    height: 140px;
+    border-radius: 16px;
+    border: 2px dashed var(--border-color);
+    background: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.foto-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.foto-placeholder {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 8px;
+}
+
+.btn-foto-upload {
+    display: inline-block;
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 20px;
+    background: var(--rosa-soft, #fce4ec);
+    color: var(--rosa-dark, #880e4f);
+    border: 1px solid var(--rosa-accent, #f48fb1);
+    cursor: pointer;
+    text-align: center;
+}
+
+.btn-foto-upload:hover {
+    background: #f8bbd9;
+}
+
+.cliente-detalhe-info .campo {
+    margin-bottom: 10px;
+}
+
+.cliente-detalhe-info .campo input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    font-size: 13px;
+    font-family: var(--font-family);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.cliente-detalhe-info .campo input[readonly] {
+    opacity: 0.85;
+    background: var(--bg-hover);
+}
+
+.cliente-localizacao-box {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 14px 16px;
+}
+
+.cliente-localizacao-box h4 {
+    font-size: 13px;
+    margin: 0 0 12px 0;
+    color: var(--text-primary);
+}
+
+body.outubro-rosa .card-cliente-buique:hover {
+    border-color: #e91e63;
+}
+
+body.outubro-rosa .autocomplete-item:hover {
+    background: #fce4ec;
+}
+
+
+/* Galeria de fotos da casa */
+.cliente-fotos-box {
+    margin-top: 14px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 14px 16px;
+}
+
+.cliente-fotos-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+.cliente-fotos-header h4 {
+    font-size: 13px;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.cliente-fotos-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0 0 12px 0;
+}
+
+.cliente-fotos-galeria {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 10px;
+}
+
+.cliente-foto-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+}
+
+.cliente-foto-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.cliente-foto-item .btn-remover-foto {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(188, 78, 44, 0.9);
+    color: #fff;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.cliente-foto-item .btn-remover-foto:hover {
+    background: #bc4e2c;
+}
+
+.cliente-fotos-vazio {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    color: var(--text-muted);
+    border: 1px dashed var(--border-color);
+    border-radius: 10px;
+}
+
+.btn-foto-galeria {
+    padding: 6px 12px;
+    font-size: 11px;
+}
+
+
+/* ============================================================
+   LOGIN — EFEITOS OUTUBRO ROSA
+   ============================================================ */
+body.outubro-rosa .login-container {
+    background: linear-gradient(160deg, #fff0f5 0%, #fce4ec 35%, #f8bbd9 70%, #f48fb1 100%);
+    overflow: hidden;
+}
+
+body.outubro-rosa .login-box {
+    position: relative;
+    z-index: 2;
+    border: 1px solid rgba(233, 30, 99, 0.25);
+    box-shadow: 0 20px 60px rgba(194, 24, 91, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+}
+
+body.outubro-rosa .login-box h2 {
+    color: #880e4f;
+}
+
+body.outubro-rosa .login-box .campo input:focus,
+body.outubro-rosa .login-box .campo select:focus {
+    border-color: #e91e63;
+    box-shadow: 0 0 0 4px rgba(233, 30, 99, 0.15);
+}
+
+.login-rosa-badge {
+    display: none;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #c2185b;
+    background: linear-gradient(90deg, #fce4ec, #f8bbd9, #fce4ec);
+    border: 1px solid #f48fb1;
+    border-radius: 999px;
+    padding: 6px 14px;
+    margin: 0 auto 14px auto;
+    width: fit-content;
+    animation: rosaPulse 2.5s ease-in-out infinite;
+}
+
+body.outubro-rosa .login-rosa-badge {
+    display: block;
+}
+
+@keyframes rosaPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(233, 30, 99, 0.25); transform: scale(1); }
+    50% { box-shadow: 0 0 16px 2px rgba(233, 30, 99, 0.35); transform: scale(1.03); }
+}
+
+.login-rosa-fx {
+    display: none;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+body.outubro-rosa .login-rosa-fx {
+    display: block;
+}
+
+.rosa-float {
+    position: absolute;
+    font-size: 22px;
+    opacity: 0.55;
+    animation: rosaFloatUp 14s linear infinite;
+    filter: drop-shadow(0 2px 4px rgba(194, 24, 91, 0.2));
+}
+
+.rosa-float.r1 { left: 8%;  animation-duration: 16s; animation-delay: 0s; font-size: 26px; }
+.rosa-float.r2 { left: 22%; animation-duration: 12s; animation-delay: 2s; font-size: 18px; }
+.rosa-float.r3 { left: 40%; animation-duration: 18s; animation-delay: 4s; font-size: 24px; }
+.rosa-float.r4 { left: 55%; animation-duration: 13s; animation-delay: 1s; font-size: 20px; }
+.rosa-float.r5 { left: 72%; animation-duration: 15s; animation-delay: 3s; font-size: 28px; }
+.rosa-float.r6 { left: 88%; animation-duration: 11s; animation-delay: 5s; font-size: 18px; }
+
+@keyframes rosaFloatUp {
+    0%   { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+    10%  { opacity: 0.6; }
+    90%  { opacity: 0.5; }
+    100% { transform: translateY(-10vh) rotate(25deg); opacity: 0; }
+}
+
+.rosa-petala {
+    position: absolute;
+    width: 12px;
+    height: 16px;
+    background: radial-gradient(ellipse at 30% 30%, #f8bbd9, #e91e63);
+    border-radius: 80% 0 80% 0;
+    opacity: 0.45;
+    animation: rosaPetala 12s linear infinite;
+}
+
+.rosa-petala.p1 { left: 12%; animation-duration: 14s; animation-delay: 0s; }
+.rosa-petala.p2 { left: 28%; animation-duration: 11s; animation-delay: 1.5s; width: 10px; height: 14px; }
+.rosa-petala.p3 { left: 45%; animation-duration: 16s; animation-delay: 3s; }
+.rosa-petala.p4 { left: 60%; animation-duration: 13s; animation-delay: 0.8s; width: 14px; height: 18px; }
+.rosa-petala.p5 { left: 75%; animation-duration: 15s; animation-delay: 2.2s; }
+.rosa-petala.p6 { left: 5%;  animation-duration: 17s; animation-delay: 4s; width: 9px; height: 12px; }
+.rosa-petala.p7 { left: 92%; animation-duration: 12s; animation-delay: 1s; }
+.rosa-petala.p8 { left: 50%; animation-duration: 18s; animation-delay: 5s; width: 11px; height: 15px; }
+
+@keyframes rosaPetala {
+    0%   { transform: translateY(105vh) rotate(0deg) translateX(0); opacity: 0; }
+    15%  { opacity: 0.5; }
+    50%  { transform: translateY(50vh) rotate(180deg) translateX(20px); }
+    85%  { opacity: 0.4; }
+    100% { transform: translateY(-10vh) rotate(360deg) translateX(-15px); opacity: 0; }
+}
