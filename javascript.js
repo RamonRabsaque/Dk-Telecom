@@ -16,6 +16,7 @@
     let currentSort = { column: null, direction: 'asc' };
     let theme = localStorage.getItem('dk_theme') || 'light';
     let modoParcial = false;
+    let clientesBuique = []; // Cadastro de clientes só para Buíque
 
     // ============================================================
     // CONFIGURAÇÃO SUPABASE (APENAS AUTENTICAÇÃO)
@@ -396,7 +397,8 @@
             localStorage.setItem('dk_sessao', JSON.stringify({
                 usuarioId: usuario.id,
                 cidade: cidadeId,
-                data: new Date().toISOString()
+                data: new Date().toISOString(),
+                dia: getDataLocalHoje()
             }));
             adicionarLog('✅ Login realizado (Admin Global)', `${usuario.nome} - ${getCidadeNome(cidadeId)}`);
             document.getElementById('loginError').classList.remove('show');
@@ -416,7 +418,8 @@
         localStorage.setItem('dk_sessao', JSON.stringify({
             usuarioId: usuario.id,
             cidade: cidadeId,
-            data: new Date().toISOString()
+            data: new Date().toISOString(),
+            dia: getDataLocalHoje()
         }));
 
         adicionarLog('✅ Login realizado', `${usuario.nome} - ${getCidadeNome(cidadeId)}`);
@@ -457,6 +460,7 @@
                         usuarioId: usuario.id,
                         cidade: cidadeId,
                         data: new Date().toISOString(),
+                        dia: getDataLocalHoje(),
                         supabase: true
                     }));
                     adicionarLog('✅ Login realizado (Admin Global)', `${usuario.nome} - ${getCidadeNome(cidadeId)}`);
@@ -477,6 +481,7 @@
                     usuarioId: usuario.id,
                     cidade: cidadeId,
                     data: new Date().toISOString(),
+                    dia: getDataLocalHoje(),
                     supabase: true
                 }));
                 adicionarLog('✅ Login realizado', `${usuario.nome} - ${getCidadeNome(cidadeId)}`);
@@ -493,11 +498,26 @@
         return fazerLoginLocal(login, senha, cidadeId);
     }
 
+    function getDataLocalHoje() {
+        const d = new Date();
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
     function verificarSessao() {
         try {
             const sessao = localStorage.getItem('dk_sessao');
             if (!sessao) return false;
             const dados = JSON.parse(sessao);
+            // Exige login novamente todo dia (sessão válida só no mesmo dia)
+            const diaSessao = dados.dia || (dados.data ? String(dados.data).slice(0, 10) : null);
+            const hoje = getDataLocalHoje();
+            if (!diaSessao || diaSessao !== hoje) {
+                localStorage.removeItem('dk_sessao');
+                return false;
+            }
             const usuario = usuarios.find(u => u.id === dados.usuarioId);
             if (!usuario || usuario.status !== 'ativo') return false;
             usuarioLogado = usuario;
@@ -505,6 +525,7 @@
             return true;
         } catch (e) {
             console.error('Erro ao verificar sessão:', e);
+            localStorage.removeItem('dk_sessao');
             return false;
         }
     }
@@ -1534,20 +1555,21 @@
         }
         .recibo-form-card-print:nth-child(5n) { page-break-after: always; }
         @media print {
-            body { padding: 5mm 8mm; }
+            body { padding: 6mm 10mm; }
             .recibo-form-card-print { 
-                border: 1px solid #000; 
-                padding: 4px 8px; 
-                margin: 0 0 4px 0; 
-                font-size: 7px;
-                height: calc(19vh - 4px);
-                min-height: 75px;
-                max-height: 95px;
+                border: 1.5px solid #000; 
+                padding: 10px 14px; 
+                margin: 0 0 10mm 0; 
+                font-size: 10px;
+                height: 48mm;
+                min-height: 48mm;
+                max-height: 48mm;
+                box-sizing: border-box;
             }
-            .recibo-form-card-print .linha-recibo-print label { width: 60px; font-size: 7px; }
-            .recibo-form-card-print .linha-recibo-print .valor-print { font-size: 8px; padding: 1px 4px; }
-            .recibo-form-card-print .logo-recibo-print img { max-width: 40px; }
-            .recibo-form-card-print:nth-child(5n) { page-break-after: always; }
+            .recibo-form-card-print .linha-recibo-print label { width: 70px; font-size: 9px; }
+            .recibo-form-card-print .linha-recibo-print .valor-print { font-size: 10px; padding: 2px 5px; }
+            .recibo-form-card-print .logo-recibo-print img { max-width: 55px; }
+            .recibo-form-card-print:nth-child(5n) { page-break-after: always; margin-bottom: 0; }
         }
         @page { size: A4; margin: 10mm 15mm; }
     </style>
@@ -2508,6 +2530,8 @@
         renderizarTabela();
         atualizarCardsResumo();
 
+        upsertClienteBuique(nome, login, idContrato, valorRaw, valorTotal);
+
         adicionarLog('📄 Criou recibo', `${nome} - ${valorRaw}`);
         adicionarAuditoria('Recibo', nome, valorTotal, 'Criou', usuarioId);
         alert(`✅ Recibo de ${nome} salvo com sucesso!`);
@@ -2542,6 +2566,388 @@
         win.document.close();
     }
 
+    // ============================================================
+    // CLIENTES BUÍQUE (cadastro + autocomplete + ficha)
+    // ============================================================
+    function carregarClientesBuique() {
+        try {
+            const saved = localStorage.getItem('dk_buique_clientes');
+            clientesBuique = saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            clientesBuique = [];
+        }
+        if (clientesBuique.length === 0 && cidadeAtual === 'buique' && recibos && recibos.length > 0) {
+            for (let r of recibos) {
+                if (!r.nome) continue;
+                const nomeNorm = String(r.nome).trim().toUpperCase();
+                if (!nomeNorm) continue;
+                if (clientesBuique.find(c => c.nome === nomeNorm)) continue;
+                clientesBuique.push({
+                    id: gerarIdUnico(),
+                    nome: nomeNorm,
+                    login: r.login || '',
+                    idContrato: r.idContrato || '',
+                    valor: r.valor || 'R$ 0,00',
+                    valorNumerico: r.valorNumerico !== undefined ? r.valorNumerico : extrairNumeroDoValor(r.valor),
+                    ultimoUso: r.data || new Date().toISOString(),
+                    foto: '',
+                    fotos: [],
+                    endereco: '',
+                    lat: '',
+                    lng: '',
+                    obsLocal: ''
+                });
+            }
+            if (clientesBuique.length > 0) {
+                clientesBuique.sort((a, b) => (b.ultimoUso || '').localeCompare(a.ultimoUso || ''));
+                salvarClientesBuique();
+            }
+        }
+    }
+
+    function salvarClientesBuique() {
+        try {
+            localStorage.setItem('dk_buique_clientes', JSON.stringify(clientesBuique));
+        } catch (e) {
+            console.warn('Erro ao salvar clientes (foto muito grande?):', e);
+            alert('⚠️ Não foi possível salvar. A foto da casa pode estar muito grande. Tente uma imagem menor.');
+        }
+        atualizarBadgeClientesBuique();
+    }
+
+    function upsertClienteBuique(nome, login, idContrato, valorRaw, valorNumerico) {
+        if (cidadeAtual !== 'buique') return;
+        const nomeNorm = (nome || '').trim().toUpperCase();
+        if (!nomeNorm) return;
+
+        let existente = clientesBuique.find(c => c.nome === nomeNorm);
+        if (existente) {
+            if (login) existente.login = login;
+            if (idContrato) existente.idContrato = idContrato;
+            if (valorRaw) {
+                existente.valor = valorRaw;
+                existente.valorNumerico = valorNumerico || extrairNumeroDoValor(valorRaw);
+            }
+            existente.ultimoUso = new Date().toISOString();
+        } else {
+            clientesBuique.unshift({
+                id: gerarIdUnico(),
+                nome: nomeNorm,
+                login: login || '',
+                idContrato: idContrato || '',
+                valor: valorRaw || 'R$ 0,00',
+                valorNumerico: valorNumerico || 0,
+                ultimoUso: new Date().toISOString(),
+                foto: '',
+                endereco: '',
+                lat: '',
+                lng: '',
+                obsLocal: ''
+            });
+        }
+        clientesBuique.sort((a, b) => (b.ultimoUso || '').localeCompare(a.ultimoUso || ''));
+        salvarClientesBuique();
+    }
+
+    function atualizarBadgeClientesBuique() {
+        const badge = document.getElementById('badgeClientesBuique');
+        if (badge) badge.textContent = clientesBuique.length;
+        const totalEl = document.getElementById('totalClientesBuique');
+        if (totalEl) totalEl.innerHTML = `Total de clientes: <span>${clientesBuique.length}</span>`;
+    }
+
+    function buscarClientesBuique(termo) {
+        if (!termo || termo.length < 1) return [];
+        const t = termo.trim().toUpperCase();
+        return clientesBuique.filter(c =>
+            (c.nome && c.nome.includes(t)) ||
+            (c.login && c.login.toUpperCase().includes(t)) ||
+            (c.idContrato && String(c.idContrato).toUpperCase().includes(t))
+        ).slice(0, 12);
+    }
+
+    function mostrarSugestoesClientes(termo) {
+        const dropdown = document.getElementById('sugestoesClientes');
+        if (!dropdown || cidadeAtual !== 'buique') {
+            if (dropdown) dropdown.style.display = 'none';
+            return;
+        }
+        const resultados = buscarClientesBuique(termo);
+        if (resultados.length === 0) {
+            dropdown.style.display = 'none';
+            dropdown.innerHTML = '';
+            return;
+        }
+        let html = '';
+        for (let c of resultados) {
+            html += `<div class="autocomplete-item" data-id="${c.id}">
+                <div class="ac-nome">${escapeHtml(c.nome)}</div>
+                <div class="ac-meta">Login: ${escapeHtml(c.login || '—')} · ID: ${escapeHtml(c.idContrato || '—')} · ${escapeHtml(c.valor || 'R$ 0,00')}</div>
+            </div>`;
+        }
+        dropdown.innerHTML = html;
+        dropdown.style.display = 'block';
+        dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+            item.addEventListener('mousedown', function (e) {
+                e.preventDefault();
+                const id = this.dataset.id;
+                const cliente = clientesBuique.find(c => c.id === id);
+                if (cliente) preencherFormComCliente(cliente);
+                dropdown.style.display = 'none';
+            });
+        });
+    }
+
+    function preencherFormComCliente(cliente) {
+        document.getElementById('reciboNome').value = cliente.nome || '';
+        document.getElementById('reciboLogin').value = cliente.login || '';
+        document.getElementById('reciboIdContrato').value = cliente.idContrato || '';
+        if (cliente.valor) document.getElementById('reciboValor').value = cliente.valor;
+    }
+
+    function esconderSugestoesClientes() {
+        const dropdown = document.getElementById('sugestoesClientes');
+        if (dropdown) dropdown.style.display = 'none';
+    }
+
+    function renderizarListaClientesBuique(filtro) {
+        const container = document.getElementById('listaClientesBuique');
+        if (!container) return;
+        let lista = clientesBuique;
+        if (filtro && filtro.trim()) lista = buscarClientesBuique(filtro);
+
+        if (lista.length === 0) {
+            container.innerHTML = `<div class="empty-table-state" style="padding:32px 16px;">
+                <div class="empty-text">${filtro ? 'Nenhum cliente encontrado.' : 'Nenhum cliente salvo ainda.<br>Salvos automaticamente ao criar recibos em Buíque.'}</div>
+            </div>`;
+            return;
+        }
+
+        let html = '';
+        for (let c of lista) {
+            const dataUso = c.ultimoUso ? new Date(c.ultimoUso).toLocaleDateString('pt-BR') : '—';
+            const temFoto = c.foto ? '📷' : '';
+            const temLocal = (c.endereco || c.lat) ? '📍' : '';
+            html += `<div class="card-cliente-buique">
+                <div class="card-cliente-info">
+                    <h4>${escapeHtml(c.nome)} ${temFoto} ${temLocal}</h4>
+                    <p>🔑 Login: <strong>${escapeHtml(c.login || '—')}</strong></p>
+                    <p>📎 ID: <strong>${escapeHtml(c.idContrato || '—')}</strong></p>
+                    <p>💰 Valor: <strong>${escapeHtml(c.valor || 'R$ 0,00')}</strong></p>
+                    <p style="font-size:10px;opacity:0.7;">Último uso: ${dataUso}</p>
+                </div>
+                <div class="card-cliente-actions">
+                    <button class="btn-card btn-imprimir-card" onclick="usarClienteNoRecibo('${c.id}')" title="Usar no recibo">📄 Usar</button>
+                    <button class="btn-card btn-ver-cliente" onclick="verClienteBuique('${c.id}')" title="Ver ficha">👁️ Ver cliente</button>
+                    <button class="btn-card btn-excluir-card" onclick="excluirClienteBuique('${c.id}')" title="Excluir">🗑️</button>
+                </div>
+            </div>`;
+        }
+        container.innerHTML = html;
+        atualizarBadgeClientesBuique();
+    }
+
+    window.usarClienteNoRecibo = function (id) {
+        const cliente = clientesBuique.find(c => c.id === id);
+        if (!cliente) return;
+        limparFormRecibo();
+        preencherFormComCliente(cliente);
+        fecharPanel(document.getElementById('panelClientes'));
+        fecharPanel(document.getElementById('panelClienteDetalhe'));
+        abrirPanel(document.getElementById('panelRecibo'));
+    };
+
+    window.verClienteBuique = function (id) {
+        const cliente = clientesBuique.find(c => c.id === id);
+        if (!cliente) return;
+        document.getElementById('detalheClienteId').value = cliente.id;
+        document.getElementById('detalheNome').value = cliente.nome || '';
+        document.getElementById('detalheLogin').value = cliente.login || '';
+        document.getElementById('detalheIdContrato').value = cliente.idContrato || '';
+        document.getElementById('detalheValor').value = cliente.valor || 'R$ 0,00';
+        document.getElementById('detalheEndereco').value = cliente.endereco || '';
+        document.getElementById('detalheLat').value = cliente.lat || '';
+        document.getElementById('detalheLng').value = cliente.lng || '';
+        document.getElementById('detalheObsLocal').value = cliente.obsLocal || '';
+        if (!Array.isArray(cliente.fotos)) cliente.fotos = [];
+        // Migra foto antiga (capa) para a galeria, se existir
+        if (cliente.foto && !cliente.fotos.includes(cliente.foto)) {
+            cliente.fotos.unshift(cliente.foto);
+            cliente.foto = '';
+            salvarClientesBuique();
+        }
+        renderizarGaleriaFotosCliente(cliente);
+        abrirPanel(document.getElementById('panelClienteDetalhe'));
+    };
+
+    window.excluirClienteBuique = function (id) {
+        if (!confirm('Excluir este cliente do cadastro de Buíque?')) return;
+        clientesBuique = clientesBuique.filter(c => c.id !== id);
+        salvarClientesBuique();
+        const busca = document.getElementById('buscaClienteBuique');
+        renderizarListaClientesBuique(busca ? busca.value : '');
+        adicionarLog('🗑️ Excluiu cliente Buíque', id);
+    };
+
+    function salvarDetalheCliente() {
+        const id = document.getElementById('detalheClienteId').value;
+        const cliente = clientesBuique.find(c => c.id === id);
+        if (!cliente) { alert('❌ Cliente não encontrado'); return; }
+        cliente.login = document.getElementById('detalheLogin').value.trim();
+        cliente.idContrato = document.getElementById('detalheIdContrato').value.trim();
+        cliente.endereco = document.getElementById('detalheEndereco').value.trim();
+        cliente.lat = document.getElementById('detalheLat').value.trim();
+        cliente.lng = document.getElementById('detalheLng').value.trim();
+        cliente.obsLocal = document.getElementById('detalheObsLocal').value.trim();
+        salvarClientesBuique();
+        renderizarListaClientesBuique(document.getElementById('buscaClienteBuique')?.value || '');
+        adicionarLog('💾 Atualizou ficha cliente', cliente.nome);
+        alert('✅ Ficha do cliente salva!');
+    }
+
+    function onClienteFotoChange(e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        if (file.size > 800 * 1024) {
+            alert('❌ Imagem muito grande. Use uma foto da casa com menos de 800 KB.');
+            e.target.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+            const dataUrl = ev.target.result;
+            const id = document.getElementById('detalheClienteId').value;
+            const cliente = clientesBuique.find(c => c.id === id);
+            if (!cliente) return;
+            cliente.foto = dataUrl;
+            document.getElementById('clienteFotoPreview').innerHTML = `<img src="${dataUrl}" alt="Foto da casa do cliente">`;
+            salvarClientesBuique();
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function renderizarGaleriaFotosCliente(cliente) {
+        const galeria = document.getElementById('clienteFotosGaleria');
+        if (!galeria) return;
+        if (!cliente.fotos) cliente.fotos = [];
+        if (cliente.fotos.length === 0) {
+            galeria.innerHTML = '<div class="cliente-fotos-vazio" id="clienteFotosVazio">Nenhuma foto adicional ainda.</div>';
+            return;
+        }
+        let html = '';
+        cliente.fotos.forEach((src, idx) => {
+            html += `<div class="cliente-foto-item">
+                <img src="${src}" alt="Foto da casa ${idx + 1}">
+                <button type="button" class="btn-remover-foto" onclick="removerFotoGaleriaCliente(${idx})" title="Remover">✕</button>
+            </div>`;
+        });
+        galeria.innerHTML = html;
+    }
+
+    function onClienteFotosGaleriaChange(e) {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+        const id = document.getElementById('detalheClienteId').value;
+        const cliente = clientesBuique.find(c => c.id === id);
+        if (!cliente) return;
+        if (!Array.isArray(cliente.fotos)) cliente.fotos = [];
+
+        const maxFotos = 12;
+        const restantes = maxFotos - cliente.fotos.length;
+        if (restantes <= 0) {
+            alert('❌ Limite de 12 fotos adicionais por cliente.');
+            e.target.value = '';
+            return;
+        }
+
+        const lista = Array.from(files).slice(0, restantes);
+        let processadas = 0;
+        lista.forEach(file => {
+            if (file.size > 800 * 1024) {
+                alert(`❌ "${file.name}" é muito grande (máx. 800 KB).`);
+                processadas++;
+                if (processadas === lista.length) {
+                    salvarClientesBuique();
+                    renderizarGaleriaFotosCliente(cliente);
+                    e.target.value = '';
+                }
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function (ev) {
+                cliente.fotos.push(ev.target.result);
+                processadas++;
+                if (processadas === lista.length) {
+                    salvarClientesBuique();
+                    renderizarGaleriaFotosCliente(cliente);
+                    e.target.value = '';
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    window.removerFotoGaleriaCliente = function (idx) {
+        const id = document.getElementById('detalheClienteId').value;
+        const cliente = clientesBuique.find(c => c.id === id);
+        if (!cliente || !cliente.fotos) return;
+        cliente.fotos.splice(idx, 1);
+        salvarClientesBuique();
+        renderizarGaleriaFotosCliente(cliente);
+    };
+
+    function abrirMapaCliente() {
+        const lat = document.getElementById('detalheLat').value.trim();
+        const lng = document.getElementById('detalheLng').value.trim();
+        const endereco = document.getElementById('detalheEndereco').value.trim();
+        let url = '';
+        if (lat && lng) {
+            url = `https://www.google.com/maps?q=${encodeURIComponent(lat + ',' + lng)}`;
+        } else if (endereco) {
+            url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`;
+        } else {
+            alert('❌ Informe latitude/longitude ou endereço para abrir o mapa.');
+            return;
+        }
+        window.open(url, '_blank');
+    }
+
+    function exportarClientesBuique() {
+        if (clientesBuique.length === 0) {
+            alert('❌ Nenhum cliente para exportar!');
+            return;
+        }
+        const wb = XLSX.utils.book_new();
+        const dados = [['Nome', 'Login', 'ID Contrato', 'Último Valor', 'Endereço', 'Latitude', 'Longitude', 'Obs. Local', 'Último Uso']];
+        for (let c of clientesBuique) {
+            dados.push([
+                c.nome || '', c.login || '', c.idContrato || '', c.valor || '',
+                c.endereco || '', c.lat || '', c.lng || '', c.obsLocal || '',
+                c.ultimoUso ? new Date(c.ultimoUso).toLocaleString('pt-BR') : ''
+            ]);
+        }
+        const ws = XLSX.utils.aoa_to_sheet(dados);
+        ws['!cols'] = [{ wch: 28 }, { wch: 16 }, { wch: 14 }, { wch: 12 }, { wch: 30 }, { wch: 12 }, { wch: 12 }, { wch: 24 }, { wch: 18 }];
+        XLSX.utils.book_append_sheet(wb, ws, 'Clientes Buíque');
+        const dataAtual = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+        XLSX.writeFile(wb, `CLIENTES_BUIQUE_${dataAtual}.xlsx`);
+        adicionarLog('📊 Exportou clientes Buíque', `${clientesBuique.length} clientes`);
+        alert('✅ Clientes exportados!');
+    }
+
+    function aplicarOutubroRosa() {
+        document.body.classList.add('outubro-rosa');
+        const banner = document.getElementById('outubroRosaBanner');
+        const fechado = localStorage.getItem('dk_rosa_banner_fechado');
+        if (banner && !fechado) {
+            banner.classList.remove('hidden');
+            document.body.classList.add('has-rosa-banner');
+        } else if (banner) {
+            banner.classList.add('hidden');
+            document.body.classList.remove('has-rosa-banner');
+        }
+    }
+
     function limparFormRecibo() {
         document.getElementById('reciboNome').value = '';
         document.getElementById('reciboLogin').value = '';
@@ -2559,6 +2965,7 @@
         let hoje = new Date().toISOString().split('T')[0];
         document.getElementById('reciboData').value = hoje;
         document.getElementById('reciboReferencia').value = hoje;
+        esconderSugestoesClientes();
     }
 
     function preencherDataRecibo() {
@@ -3368,6 +3775,17 @@
             btnAdmin.style.display = (usuarioLogado && usuarioLogado.nivel === 'admin') ? 'flex' : 'none';
         }
 
+        const btnClientes = document.getElementById('btnClientesBuique');
+        if (btnClientes) {
+            if (cidadeAtual === 'buique') {
+                btnClientes.style.display = 'flex';
+                carregarClientesBuique();
+                atualizarBadgeClientesBuique();
+            } else {
+                btnClientes.style.display = 'none';
+            }
+        }
+
         renderizarTabela();
         atualizarCardsResumo();
         carregarRecibos();
@@ -3460,6 +3878,8 @@
         await carregarCidades();
         carregarLogs();
         carregarAuditoria();
+        carregarClientesBuique();
+        aplicarOutubroRosa();
         popularSelectCidadesLogin();
 
         if (verificarSessao()) {
@@ -3515,6 +3935,14 @@
         });
         document.getElementById('btnHistorico').addEventListener('click', function () {
             abrirPanel(document.getElementById('panelHistorico'));
+        });
+        document.getElementById('btnClientesBuique').addEventListener('click', function () {
+            if (cidadeAtual !== 'buique') return;
+            carregarClientesBuique();
+            renderizarListaClientesBuique('');
+            const busca = document.getElementById('buscaClienteBuique');
+            if (busca) busca.value = '';
+            abrirPanel(document.getElementById('panelClientes'));
         });
         document.getElementById('btnVisualizar').addEventListener('click', visualizarDados);
         document.getElementById('btnWord').addEventListener('click', exportarExcel);
@@ -3611,6 +4039,50 @@
 
         document.getElementById('reciboValor').addEventListener('input', function () { formatarInputMoeda(this); });
         document.getElementById('editarValor').addEventListener('input', function () { formatarInputMoeda(this); });
+
+        const inputNomeRecibo = document.getElementById('reciboNome');
+        if (inputNomeRecibo) {
+            inputNomeRecibo.addEventListener('input', function () {
+                if (cidadeAtual === 'buique') mostrarSugestoesClientes(this.value);
+            });
+            inputNomeRecibo.addEventListener('blur', function () {
+                setTimeout(esconderSugestoesClientes, 200);
+            });
+            inputNomeRecibo.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') esconderSugestoesClientes();
+            });
+        }
+
+        const buscaCliente = document.getElementById('buscaClienteBuique');
+        if (buscaCliente) {
+            buscaCliente.addEventListener('input', function () {
+                renderizarListaClientesBuique(this.value);
+            });
+        }
+        const btnExportClientes = document.getElementById('btnExportarClientesBuique');
+        if (btnExportClientes) btnExportClientes.addEventListener('click', exportarClientesBuique);
+
+        const btnSalvarDetalhe = document.getElementById('btnSalvarDetalheCliente');
+        if (btnSalvarDetalhe) btnSalvarDetalhe.addEventListener('click', salvarDetalheCliente);
+        const btnUsarFicha = document.getElementById('btnUsarClienteDaFicha');
+        if (btnUsarFicha) btnUsarFicha.addEventListener('click', function () {
+            const id = document.getElementById('detalheClienteId').value;
+            if (id) usarClienteNoRecibo(id);
+        });
+        const btnMapa = document.getElementById('btnAbrirMapaCliente');
+        if (btnMapa) btnMapa.addEventListener('click', abrirMapaCliente);
+        const fotosGaleriaInput = document.getElementById('clienteFotosGaleriaInput');
+        if (fotosGaleriaInput) fotosGaleriaInput.addEventListener('change', onClienteFotosGaleriaChange);
+
+        const btnFecharRosa = document.getElementById('btnFecharRosaBanner');
+        if (btnFecharRosa) {
+            btnFecharRosa.addEventListener('click', function () {
+                const banner = document.getElementById('outubroRosaBanner');
+                if (banner) banner.classList.add('hidden');
+                document.body.classList.remove('has-rosa-banner');
+                localStorage.setItem('dk_rosa_banner_fechado', '1');
+            });
+        }
         document.getElementById('parcialDinheiro').addEventListener('input', function () {
             formatarInputMoeda(this);
             calcularTotalParcial();
@@ -3633,7 +4105,9 @@
                     'panel-historico',
                     'panel-editar',
                     'panel-backup',
-                    'panel-admin'
+                    'panel-admin',
+                    'panel-clientes',
+                    'panel-cliente-detalhe'
                 ];
                 let panel = null;
                 for (let p of paineis) {
@@ -3651,7 +4125,7 @@
 
         document.getElementById('overlay').addEventListener('click', function () {
             document.querySelectorAll(
-                '.panel-adicionar.show, .panel-recibo.show, .panel-historico.show, .panel-editar.show, .panel-backup.show, .panel-admin.show'
+                '.panel-adicionar.show, .panel-recibo.show, .panel-historico.show, .panel-editar.show, .panel-backup.show, .panel-admin.show, .panel-clientes.show, .panel-cliente-detalhe.show'
             ).forEach(p => fecharPanel(p));
         });
 
@@ -3687,7 +4161,7 @@
             }
             if (e.key === 'Escape') {
                 document.querySelectorAll(
-                    '.panel-adicionar.show, .panel-recibo.show, .panel-historico.show, .panel-editar.show, .panel-backup.show, .panel-admin.show'
+                    '.panel-adicionar.show, .panel-recibo.show, .panel-historico.show, .panel-editar.show, .panel-backup.show, .panel-admin.show, .panel-clientes.show, .panel-cliente-detalhe.show'
                 ).forEach(p => fecharPanel(p));
             }
         });
