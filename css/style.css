@@ -2578,59 +2578,59 @@
 
 
 /* ============================================================
-   OUTUBRO ROSA + CLIENTES BUÍQUE
+   NOVEMBRO AZUL + CLIENTES BUÍQUE
    ============================================================ */
 
-/* Tema Outubro Rosa (sobrescreve cores principais de forma sutil) */
+/* Tema Novembro Azul (sobrescreve cores principais de forma sutil) */
 :root {
-    --rosa-primary: #c2185b;
-    --rosa-light: #e91e63;
-    --rosa-soft: #fce4ec;
-    --rosa-dark: #880e4f;
-    --rosa-accent: #f48fb1;
+    --azul-primary: #1565c0;
+    --azul-light: #1976d2;
+    --azul-soft: #e3f2fd;
+    --azul-dark: #0d47a1;
+    --azul-accent: #64b5f6;
 }
 
-body.outubro-rosa {
-    --primary: #c2185b;
-    --primary-light: #e91e63;
-    --primary-dark: #880e4f;
-    --primary-hover: #ad1457;
-    --card-entrada: #c2185b;
-    --card-cofre: #e91e63;
+body.novembro-azul {
+    --primary: #1565c0;
+    --primary-light: #1976d2;
+    --primary-dark: #0d47a1;
+    --primary-hover: #0d47a1;
+    --card-entrada: #1565c0;
+    --card-cofre: #1976d2;
 }
 
-body.outubro-rosa .btn-sidebar.primary {
-    background: linear-gradient(135deg, #c2185b, #e91e63);
-    box-shadow: 0 2px 10px rgba(194, 24, 91, 0.35);
+body.novembro-azul .btn-sidebar.primary {
+    background: linear-gradient(135deg, #1565c0, #1976d2);
+    box-shadow: 0 2px 10px rgba(21, 101, 192, 0.35);
 }
 
-body.outubro-rosa .btn-sidebar.primary:hover {
-    background: linear-gradient(135deg, #ad1457, #c2185b);
+body.novembro-azul .btn-sidebar.primary:hover {
+    background: linear-gradient(135deg, #0d47a1, #1565c0);
 }
 
-body.outubro-rosa thead th {
-    background: #e91e63;
-    border-bottom-color: #880e4f;
+body.novembro-azul thead th {
+    background: #1976d2;
+    border-bottom-color: #0d47a1;
 }
 
-body.outubro-rosa .info-pill {
-    background: linear-gradient(135deg, #880e4f, #c2185b);
+body.novembro-azul .info-pill {
+    background: linear-gradient(135deg, #0d47a1, #1565c0);
 }
 
-body.outubro-rosa .btn-add-principal,
-body.outubro-rosa .btn-recibo.btn-salvar-recibo,
-body.outubro-rosa .login-box .btn-login {
-    background: linear-gradient(135deg, #c2185b, #e91e63);
-    box-shadow: 0 4px 16px rgba(194, 24, 91, 0.25);
+body.novembro-azul .btn-add-principal,
+body.novembro-azul .btn-recibo.btn-salvar-recibo,
+body.novembro-azul .login-box .btn-login {
+    background: linear-gradient(135deg, #1565c0, #1976d2);
+    box-shadow: 0 4px 16px rgba(21, 101, 192, 0.25);
 }
 
-body.outubro-rosa .btn-add-principal:hover,
-body.outubro-rosa .btn-recibo.btn-salvar-recibo:hover,
-body.outubro-rosa .login-box .btn-login:hover {
-    background: linear-gradient(135deg, #ad1457, #c2185b);
+body.novembro-azul .btn-add-principal:hover,
+body.novembro-azul .btn-recibo.btn-salvar-recibo:hover,
+body.novembro-azul .login-box .btn-login:hover {
+    background: linear-gradient(135deg, #0d47a1, #1565c0);
 }
 
-.outubro-rosa-banner {
+.novembro-azul-banner {
     position: fixed;
     top: 0;
     left: 0;
@@ -2641,31 +2641,31 @@ body.outubro-rosa .login-box .btn-login:hover {
     justify-content: center;
     gap: 10px;
     padding: 8px 40px 8px 16px;
-    background: linear-gradient(90deg, #fce4ec, #f8bbd9, #fce4ec);
-    color: #880e4f;
+    background: linear-gradient(90deg, #e3f2fd, #bbdefb, #e3f2fd);
+    color: #0d47a1;
     font-size: 13px;
     font-weight: 600;
     letter-spacing: 0.3px;
-    border-bottom: 2px solid #f48fb1;
-    box-shadow: 0 2px 12px rgba(194, 24, 91, 0.15);
+    border-bottom: 2px solid #64b5f6;
+    box-shadow: 0 2px 12px rgba(21, 101, 192, 0.15);
 }
 
-.outubro-rosa-banner .rosa-ribbon {
+.novembro-azul-banner .azul-ribbon {
     font-size: 18px;
 }
 
-.outubro-rosa-banner.hidden {
+.novembro-azul-banner.hidden {
     display: none;
 }
 
-.rosa-banner-close {
+.azul-banner-close {
     position: absolute;
     right: 12px;
     top: 50%;
     transform: translateY(-50%);
     background: transparent;
     border: none;
-    color: #880e4f;
+    color: #0d47a1;
     font-size: 16px;
     cursor: pointer;
     width: 28px;
@@ -2676,12 +2676,12 @@ body.outubro-rosa .login-box .btn-login:hover {
     justify-content: center;
 }
 
-.rosa-banner-close:hover {
-    background: rgba(194, 24, 91, 0.12);
+.azul-banner-close:hover {
+    background: rgba(21, 101, 192, 0.12);
 }
 
-body.outubro-rosa.has-rosa-banner .login-container,
-body.outubro-rosa.has-rosa-banner .app-layout {
+body.novembro-azul.has-azul-banner .login-container,
+body.novembro-azul.has-azul-banner .app-layout {
     padding-top: 40px;
 }
 
@@ -2764,7 +2764,7 @@ body.outubro-rosa.has-rosa-banner .app-layout {
 .input-busca-cliente:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(194, 24, 91, 0.12);
+    box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.12);
 }
 
 .lista-clientes-buique {
@@ -2813,13 +2813,13 @@ body.outubro-rosa.has-rosa-banner .app-layout {
 }
 
 .btn-ver-cliente {
-    background: #fce4ec !important;
-    border-color: #f48fb1 !important;
-    color: #880e4f !important;
+    background: #e3f2fd !important;
+    border-color: #64b5f6 !important;
+    color: #0d47a1 !important;
 }
 
 .btn-ver-cliente:hover {
-    background: #f8bbd9 !important;
+    background: #bbdefb !important;
 }
 
 /* Ficha do cliente */
@@ -2874,15 +2874,15 @@ body.outubro-rosa.has-rosa-banner .app-layout {
     font-size: 11px;
     font-weight: 600;
     border-radius: 20px;
-    background: var(--rosa-soft, #fce4ec);
-    color: var(--rosa-dark, #880e4f);
-    border: 1px solid var(--rosa-accent, #f48fb1);
+    background: var(--azul-soft, #e3f2fd);
+    color: var(--azul-dark, #0d47a1);
+    border: 1px solid var(--azul-accent, #64b5f6);
     cursor: pointer;
     text-align: center;
 }
 
 .btn-foto-upload:hover {
-    background: #f8bbd9;
+    background: #bbdefb;
 }
 
 .cliente-detalhe-info .campo {
@@ -2918,12 +2918,12 @@ body.outubro-rosa.has-rosa-banner .app-layout {
     color: var(--text-primary);
 }
 
-body.outubro-rosa .card-cliente-buique:hover {
-    border-color: #e91e63;
+body.novembro-azul .card-cliente-buique:hover {
+    border-color: #1976d2;
 }
 
-body.outubro-rosa .autocomplete-item:hover {
-    background: #fce4ec;
+body.novembro-azul .autocomplete-item:hover {
+    background: #e3f2fd;
 }
 
 
@@ -3018,59 +3018,59 @@ body.outubro-rosa .autocomplete-item:hover {
 
 
 /* ============================================================
-   LOGIN — EFEITOS OUTUBRO ROSA
+   LOGIN — EFEITOS NOVEMBRO AZUL
    ============================================================ */
-body.outubro-rosa .login-container {
-    background: linear-gradient(160deg, #fff0f5 0%, #fce4ec 35%, #f8bbd9 70%, #f48fb1 100%);
+body.novembro-azul .login-container {
+    background: linear-gradient(160deg, #e3f2fd 0%, #bbdefb 35%, #90caf9 70%, #64b5f6 100%);
     overflow: hidden;
 }
 
-body.outubro-rosa .login-box {
+body.novembro-azul .login-box {
     position: relative;
     z-index: 2;
-    border: 1px solid rgba(233, 30, 99, 0.25);
-    box-shadow: 0 20px 60px rgba(194, 24, 91, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+    border: 1px solid rgba(25, 118, 210, 0.25);
+    box-shadow: 0 20px 60px rgba(21, 101, 192, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
     background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(8px);
 }
 
-body.outubro-rosa .login-box h2 {
-    color: #880e4f;
+body.novembro-azul .login-box h2 {
+    color: #0d47a1;
 }
 
-body.outubro-rosa .login-box .campo input:focus,
-body.outubro-rosa .login-box .campo select:focus {
-    border-color: #e91e63;
-    box-shadow: 0 0 0 4px rgba(233, 30, 99, 0.15);
+body.novembro-azul .login-box .campo input:focus,
+body.novembro-azul .login-box .campo select:focus {
+    border-color: #1976d2;
+    box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.15);
 }
 
-.login-rosa-badge {
+.login-azul-badge {
     display: none;
     text-align: center;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.8px;
     text-transform: uppercase;
-    color: #c2185b;
-    background: linear-gradient(90deg, #fce4ec, #f8bbd9, #fce4ec);
-    border: 1px solid #f48fb1;
+    color: #1565c0;
+    background: linear-gradient(90deg, #e3f2fd, #bbdefb, #e3f2fd);
+    border: 1px solid #64b5f6;
     border-radius: 999px;
     padding: 6px 14px;
     margin: 0 auto 14px auto;
     width: fit-content;
-    animation: rosaPulse 2.5s ease-in-out infinite;
+    animation: azulPulse 2.5s ease-in-out infinite;
 }
 
-body.outubro-rosa .login-rosa-badge {
+body.novembro-azul .login-azul-badge {
     display: block;
 }
 
-@keyframes rosaPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(233, 30, 99, 0.25); transform: scale(1); }
-    50% { box-shadow: 0 0 16px 2px rgba(233, 30, 99, 0.35); transform: scale(1.03); }
+@keyframes azulPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(25, 118, 210, 0.25); transform: scale(1); }
+    50% { box-shadow: 0 0 16px 2px rgba(25, 118, 210, 0.35); transform: scale(1.03); }
 }
 
-.login-rosa-fx {
+.login-azul-fx {
     display: none;
     position: absolute;
     inset: 0;
@@ -3079,52 +3079,52 @@ body.outubro-rosa .login-rosa-badge {
     overflow: hidden;
 }
 
-body.outubro-rosa .login-rosa-fx {
+body.novembro-azul .login-azul-fx {
     display: block;
 }
 
-.rosa-float {
+.azul-float {
     position: absolute;
     font-size: 22px;
     opacity: 0.55;
-    animation: rosaFloatUp 14s linear infinite;
-    filter: drop-shadow(0 2px 4px rgba(194, 24, 91, 0.2));
+    animation: azulFloatUp 14s linear infinite;
+    filter: drop-shadow(0 2px 4px rgba(21, 101, 192, 0.2));
 }
 
-.rosa-float.r1 { left: 8%;  animation-duration: 16s; animation-delay: 0s; font-size: 26px; }
-.rosa-float.r2 { left: 22%; animation-duration: 12s; animation-delay: 2s; font-size: 18px; }
-.rosa-float.r3 { left: 40%; animation-duration: 18s; animation-delay: 4s; font-size: 24px; }
-.rosa-float.r4 { left: 55%; animation-duration: 13s; animation-delay: 1s; font-size: 20px; }
-.rosa-float.r5 { left: 72%; animation-duration: 15s; animation-delay: 3s; font-size: 28px; }
-.rosa-float.r6 { left: 88%; animation-duration: 11s; animation-delay: 5s; font-size: 18px; }
+.azul-float.r1 { left: 8%;  animation-duration: 16s; animation-delay: 0s; font-size: 26px; }
+.azul-float.r2 { left: 22%; animation-duration: 12s; animation-delay: 2s; font-size: 18px; }
+.azul-float.r3 { left: 40%; animation-duration: 18s; animation-delay: 4s; font-size: 24px; }
+.azul-float.r4 { left: 55%; animation-duration: 13s; animation-delay: 1s; font-size: 20px; }
+.azul-float.r5 { left: 72%; animation-duration: 15s; animation-delay: 3s; font-size: 28px; }
+.azul-float.r6 { left: 88%; animation-duration: 11s; animation-delay: 5s; font-size: 18px; }
 
-@keyframes rosaFloatUp {
+@keyframes azulFloatUp {
     0%   { transform: translateY(110vh) rotate(0deg); opacity: 0; }
     10%  { opacity: 0.6; }
     90%  { opacity: 0.5; }
     100% { transform: translateY(-10vh) rotate(25deg); opacity: 0; }
 }
 
-.rosa-petala {
+.azul-petala {
     position: absolute;
     width: 12px;
     height: 16px;
-    background: radial-gradient(ellipse at 30% 30%, #f8bbd9, #e91e63);
+    background: radial-gradient(ellipse at 30% 30%, #bbdefb, #1976d2);
     border-radius: 80% 0 80% 0;
     opacity: 0.45;
-    animation: rosaPetala 12s linear infinite;
+    animation: azulPetala 12s linear infinite;
 }
 
-.rosa-petala.p1 { left: 12%; animation-duration: 14s; animation-delay: 0s; }
-.rosa-petala.p2 { left: 28%; animation-duration: 11s; animation-delay: 1.5s; width: 10px; height: 14px; }
-.rosa-petala.p3 { left: 45%; animation-duration: 16s; animation-delay: 3s; }
-.rosa-petala.p4 { left: 60%; animation-duration: 13s; animation-delay: 0.8s; width: 14px; height: 18px; }
-.rosa-petala.p5 { left: 75%; animation-duration: 15s; animation-delay: 2.2s; }
-.rosa-petala.p6 { left: 5%;  animation-duration: 17s; animation-delay: 4s; width: 9px; height: 12px; }
-.rosa-petala.p7 { left: 92%; animation-duration: 12s; animation-delay: 1s; }
-.rosa-petala.p8 { left: 50%; animation-duration: 18s; animation-delay: 5s; width: 11px; height: 15px; }
+.azul-petala.p1 { left: 12%; animation-duration: 14s; animation-delay: 0s; }
+.azul-petala.p2 { left: 28%; animation-duration: 11s; animation-delay: 1.5s; width: 10px; height: 14px; }
+.azul-petala.p3 { left: 45%; animation-duration: 16s; animation-delay: 3s; }
+.azul-petala.p4 { left: 60%; animation-duration: 13s; animation-delay: 0.8s; width: 14px; height: 18px; }
+.azul-petala.p5 { left: 75%; animation-duration: 15s; animation-delay: 2.2s; }
+.azul-petala.p6 { left: 5%;  animation-duration: 17s; animation-delay: 4s; width: 9px; height: 12px; }
+.azul-petala.p7 { left: 92%; animation-duration: 12s; animation-delay: 1s; }
+.azul-petala.p8 { left: 50%; animation-duration: 18s; animation-delay: 5s; width: 11px; height: 15px; }
 
-@keyframes rosaPetala {
+@keyframes azulPetala {
     0%   { transform: translateY(105vh) rotate(0deg) translateX(0); opacity: 0; }
     15%  { opacity: 0.5; }
     50%  { transform: translateY(50vh) rotate(180deg) translateX(20px); }
