@@ -2935,16 +2935,16 @@
         alert('✅ Clientes exportados!');
     }
 
-    function aplicarOutubroRosa() {
-        document.body.classList.add('outubro-rosa');
-        const banner = document.getElementById('outubroRosaBanner');
-        const fechado = localStorage.getItem('dk_rosa_banner_fechado');
+    function aplicarNovembroAzul() {
+        document.body.classList.add('novembro-azul');
+        const banner = document.getElementById('novembroAzulBanner');
+        const fechado = localStorage.getItem('dk_azul_banner_fechado');
         if (banner && !fechado) {
             banner.classList.remove('hidden');
-            document.body.classList.add('has-rosa-banner');
+            document.body.classList.add('has-azul-banner');
         } else if (banner) {
             banner.classList.add('hidden');
-            document.body.classList.remove('has-rosa-banner');
+            document.body.classList.remove('has-azul-banner');
         }
     }
 
@@ -3879,7 +3879,7 @@
         carregarLogs();
         carregarAuditoria();
         carregarClientesBuique();
-        aplicarOutubroRosa();
+        aplicarNovembroAzul();
         popularSelectCidadesLogin();
 
         if (verificarSessao()) {
@@ -4074,13 +4074,13 @@
         const fotosGaleriaInput = document.getElementById('clienteFotosGaleriaInput');
         if (fotosGaleriaInput) fotosGaleriaInput.addEventListener('change', onClienteFotosGaleriaChange);
 
-        const btnFecharRosa = document.getElementById('btnFecharRosaBanner');
-        if (btnFecharRosa) {
-            btnFecharRosa.addEventListener('click', function () {
-                const banner = document.getElementById('outubroRosaBanner');
+        const btnFecharAzul = document.getElementById('btnFecharAzulBanner');
+        if (btnFecharAzul) {
+            btnFecharAzul.addEventListener('click', function () {
+                const banner = document.getElementById('novembroAzulBanner');
                 if (banner) banner.classList.add('hidden');
-                document.body.classList.remove('has-rosa-banner');
-                localStorage.setItem('dk_rosa_banner_fechado', '1');
+                document.body.classList.remove('has-azul-banner');
+                localStorage.setItem('dk_azul_banner_fechado', '1');
             });
         }
         document.getElementById('parcialDinheiro').addEventListener('input', function () {
